@@ -13,7 +13,7 @@ import Login from "./pages/authPage/Login.jsx";
 import AuthProvider from "./providers/AuthProvider.jsx";
 import Register from "./pages/authPage/Register.jsx";
 import { Toaster } from 'sonner';
-import Cart from "./pages/Cart/cart.jsx";
+import Cart from "./pages/Cart/Cart.jsx";
 import CheckoutPage from "./pages/checkout/Checkout.jsx";
 import About from "./pages/About/About.jsx";
 import Contact from "./pages/About/Contact.jsx";
