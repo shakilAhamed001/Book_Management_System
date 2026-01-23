@@ -1,0 +1,142 @@
+import React, { useState } from "react";
+
+const UpdateBookModal = ({ book, isOpen, onClose, onUpdate }) => {
+  const [formData, setFormData] = useState({
+    title: book.title,
+    author: book.author,
+    publishedYear: book.publishedYear,
+    genre: book.genre,
+    price: book.price,
+    description: book.description,
+    imageUrl: book.imageUrl,
+    bookUrl: book.bookUrl,
+  });
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onUpdate(formData);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl shadow-lg w-11/12 max-w-lg p-6">
+        <h2 className="text-2xl font-semibold mb-4">Update Book Info</h2>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Title</label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
+          {/* Author */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Author</label>
+            <input
+              type="text"
+              name="author"
+              value={formData.author}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
+          {/* Published Year */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Published Year</label>
+            <input
+              type="number"
+              name="publishedYear"
+              value={formData.publishedYear}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
+          {/* Genre */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Genre</label>
+            <input
+              type="text"
+              name="genre"
+              value={formData.genre}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
+          {/* Price */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Price</label>
+            <input
+              type="number"
+              name="price"
+              value={formData.price}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Description</label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
+          {/* Image URL */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Image URL</label>
+            <input
+              type="text"
+              name="imageUrl"
+              value={formData.imageUrl}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
+          {/* Book URL */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Book URL</label>
+            <input
+              type="text"
+              name="bookUrl"
+              value={formData.bookUrl}
+              onChange={handleChange}
+              className="w-full border rounded-lg p-2"
+            />
+          </div>
+          {/* Buttons */}
+          <div className="flex justify-end space-x-2 mt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Update
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default UpdateBookModal;
