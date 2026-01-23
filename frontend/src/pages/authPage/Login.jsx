@@ -1,28 +1,36 @@
+// React hooks এবং routing এর জন্য প্রয়োজনীয় imports
 import { useContext } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import { AuthContext } from "../../providers/AuthProvider";
-import { Bounce, toast } from "react-toastify";
-import { FaGoogle } from "react-icons/fa";
+import { AuthContext } from "../../providers/AuthProvider"; // Authentication context
+import { Bounce, toast } from "react-toastify"; // Toast notifications
+import { FaGoogle } from "react-icons/fa"; // Google icon
 
+// User login করার component
 const Login = () => {
+  // Authentication context থেকে login functions নিয়ে আসা
   const { setUser, logInUser, signInWithGoogle } = useContext(AuthContext);
-  const location = useLocation();
-  const navigate = useNavigate();
-  // console.log(location);
+  const location = useLocation(); // Current location (redirect এর জন্য)
+  const navigate = useNavigate(); // Page navigation এর জন্য
 
+  // Email/Password দিয়ে login handle করার function
   const handleLogin = (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Default form submit prevent করা
 
+    // Form থেকে email এবং password নিয়ে আসা
     const form = e.target;
     const email = form.email.value;
     const password = form.password.value;
 
-    // console.log(email, password);
-
+    // AuthProvider থেকে logInUser function call করা
     logInUser(email, password)
       .then((result) => {
-        setUser(result.user);
+        // Login successful হলে
+        setUser(result.user); // User state set করা
+        
+        // Previous page এ redirect করা, না থাকলে home page এ
         navigate(location?.state ? location.state : "/");
+        
+        // Success toast notification show করা
         const notify = () =>
           toast.success("Login Successfully", {
             position: "top-right",
@@ -38,7 +46,10 @@ const Login = () => {
         notify();
       })
       .catch((error) => {
+        // Login error হলে
         console.log(error.code);
+        
+        // Error toast notification show করা
         const notify = () =>
           toast.error(error.code, {
             position: "top-right",
@@ -55,11 +66,16 @@ const Login = () => {
       });
   };
 
+  // Google দিয়ে login handle করার function
   const handleLogInGoogle = () => {
+    // AuthProvider থেকে Google login function call করা
     signInWithGoogle()
       .then((result) => {
+        // Google login successful হলে
         console.log(result.user);
-        setUser(result.user);
+        setUser(result.user); // User state set করা
+        
+        // Success toast notification
         const notify = () =>
           toast.success("Login Successfully", {
             position: "top-right",
@@ -72,10 +88,15 @@ const Login = () => {
             theme: "dark",
             transition: Bounce,
           });
+        
+        // Previous page এ redirect করা
         navigate(location?.state ? location.state : "/");
         notify();
       })
-      .catch((error) => console.log(error));
+      .catch((error) => {
+        // Google login error handle করা
+        console.log(error);
+      });
   };
 
   return (

@@ -1,36 +1,48 @@
+// React hooks এবং প্রয়োজনীয় libraries import
 import React, { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../../providers/AuthProvider';
-import { toast } from 'react-toastify';
-import { FaEye, FaUserShield } from 'react-icons/fa';
+import { AuthContext } from '../../providers/AuthProvider'; // Authentication context
+import { toast } from 'react-toastify'; // Toast notifications
+import { FaEye, FaUserShield } from 'react-icons/fa'; // Icons
 
+// Admin dashboard component - user management এর জন্য
 const AdminDashboard = () => {
+  // Authentication context থেকে user info, token function এবং role
   const { user, getToken, role } = useContext(AuthContext);
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
- 
+  
+  // Component states
+  const [users, setUsers] = useState([]);              // All users list
+  const [loading, setLoading] = useState(true);        // Loading state
+  const [selectedUser, setSelectedUser] = useState(null); // Selected user for modal
+  const [isModalOpen, setIsModalOpen] = useState(false);  // Modal open/close state
+  // Component mount হওয়ার সময় users fetch করা
   useEffect(() => {
+    // Admin role check - শুধু admin রা access করতে পারবে
     if (role !== 'admin') {
       toast.error('Access denied: Admin role required');
       setLoading(false);
       return;
     }
 
+    // All users fetch করার function
     const fetchUsers = async () => {
       try {
+        // JWT token get করা
         const token = await getToken();
         console.log('Fetching users with token:', token.substring(0, 20) + '...');
+        
+        // Backend API call - users list এর জন্য
         const response = await fetch('http://localhost:3000/api/users', {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `Bearer ${token}`, // JWT token authentication
             'Content-Type': 'application/json',
           },
         });
+        
         const data = await response.json();
+        
         if (response.ok) {
           console.log('Users fetched successfully:', data.users);
-          setUsers(data.users);
+          setUsers(data.users); // Users state update করা
         } else {
           console.error('Fetch error:', data.error);
           toast.error(data.error || 'Failed to fetch users');
@@ -39,32 +51,40 @@ const AdminDashboard = () => {
         console.error('Fetch users error:', error.message);
         toast.error(`Error fetching users: ${error.message}`);
       } finally {
-        setLoading(false);
+        setLoading(false); // Loading state end
       }
     };
 
+    // User logged in এবং admin role আছে কিনা check করে fetch করা
     if (user && role === 'admin') {
       fetchUsers();
     } else {
       console.log('No user authenticated or not an admin');
       setLoading(false);
     }
-  }, [user, getToken, role]);
+  }, [user, getToken, role]); // Dependencies - এই values change হলে re-run হবে
 
+  // User কে admin role দেওয়ার function
   const handleMakeAdmin = async (uid) => {
     try {
+      // JWT token get করা
       const token = await getToken();
       console.log('Making admin for UID:', uid);
+      
+      // Backend API call - user role update করা
       const response = await fetch('http://localhost:3000/api/set-role', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ uid, role: 'admin' }),
+        body: JSON.stringify({ uid, role: 'admin' }), // User ID এবং admin role
       });
+      
       const data = await response.json();
+      
       if (response.ok) {
+        // UI তে optimistically update করা (server response এর আগেই)
         setUsers(users.map(u => u.uid === uid ? { ...u, role: 'admin' } : u));
         toast.success('User role updated to admin');
       } else {
@@ -77,14 +97,16 @@ const AdminDashboard = () => {
     }
   };
 
+  // User details view করার জন্য modal open করা
   const handleViewData = (user) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
+    setSelectedUser(user);   // Selected user set করা
+    setIsModalOpen(true);    // Modal open করা
   };
 
+  // Modal close করার function
   const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedUser(null);
+    setIsModalOpen(false);   // Modal close করা
+    setSelectedUser(null);   // Selected user clear করা
   };
 
   if (loading) {

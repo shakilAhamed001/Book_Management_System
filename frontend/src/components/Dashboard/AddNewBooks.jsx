@@ -1,139 +1,132 @@
+// React hooks এবং প্রয়োজনীয় libraries import করা
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
-import { AuthContext } from '../../providers/AuthProvider';
-import { baseUrl } from '../../utils/baseUrl';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import axios from 'axios'; // HTTP requests এর জন্য
+import { AuthContext } from '../../providers/AuthProvider'; // Authentication context
+import { baseUrl } from '../../utils/baseUrl'; // API base URL
+import { useNavigate } from 'react-router-dom'; // Navigation এর জন্য
+import { toast } from 'sonner'; // Toast notifications
 
+// Admin নতুন book add করার component
 const AddNewBooks = () => {
+  // Authentication context থেকে user info এবং token function
   const { user, getToken } = useContext(AuthContext);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // Page navigation এর জন্য
+  
+  // Form data state - সব input fields এর values
   const [form, setForm] = useState({
-    title: '',
-    author: '',
-    publishedYear: '',
-    genre: '',
-    price: '',
-    description: '',
-    bookUrl: '',
-    imageUrl: '',
+    title: '',        // বইয়ের নাম
+    author: '',       // লেখকের নাম
+    publishedYear: '', // প্রকাশের বছর
+    genre: '',        // বইয়ের ধরন
+    price: '',        // দাম
+    description: '',  // বর্ণনা
+    bookUrl: '',      // বইয়ের URL
+    imageUrl: '',     // ছবির URL
   });
-  const [loading, setLoading] = useState(false);
-  const [fetchLoading, setFetchLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [books, setBooks] = useState([]);
+  
+  // Loading states
+  const [loading, setLoading] = useState(false);           // Form submit loading
+  const [fetchLoading, setFetchLoading] = useState(false); // Books fetch loading
+  const [error, setError] = useState('');                  // Error messages
+  const [success, setSuccess] = useState('');              // Success messages
+  const [books, setBooks] = useState([]);                  // Available books list
 
+  // Form input change handle করার function
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const { name, value } = e.target; // Input field এর name এবং value
+    setForm((prev) => ({ ...prev, [name]: value })); // State update করা
   };
 
+  // URL validation function - valid URL কিনা check করা
   const isValidUrl = (url) => {
-    if (!url) return true; // Allow empty URLs
+    if (!url) return true; // Empty URL allow করা
     try {
-      new URL(url);
+      new URL(url); // URL constructor দিয়ে validate করা
       return true;
     } catch {
-      return false;
+      return false; // Invalid URL
     }
   };
 
+  // Form submit handle করার main function
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+    e.preventDefault(); // Default form submit prevent করা
+    setError('');   // Previous error clear করা
+    setSuccess(''); // Previous success message clear করা
 
-    console.log('Base URL:', baseUrl);
-    console.log('User:', user);
-
+    // User logged in আছে কিনা check করা
     if (!user) {
       setError('Please log in to add a book.');
-      navigate('/auth/login');
+      navigate('/auth/login'); // Login page এ redirect করা
       return;
     }
 
-    // Client-side validation
+    // Client-side validation - অবশ্যক fields check করা
     if (!form.title || !form.author || !form.price) {
       setError('Title, author, and price are required.');
       return;
     }
-    if (form.publishedYear && isNaN(form.publishedYear)) {
-      setError('Published year must be a valid number.');
-      return;
-    }
-    if (isNaN(form.price)) {
-      setError('Price must be a valid number.');
-      return;
-    }
-    if (form.bookUrl && !isValidUrl(form.bookUrl)) {
-      setError('Book URL must be a valid URL.');
-      return;
-    }
-    if (form.imageUrl && !isValidUrl(form.imageUrl)) {
-      setError('Image URL must be a valid URL.');
-      return;
-    }
 
-    setLoading(true);
+    setLoading(true); // Loading state start করা
     try {
+      // User token get করা authentication এর জন্য
       const token = await getToken();
+      
+      // API এ send করার জন্য payload prepare করা
       const payload = {
         ...form,
         publishedYear: form.publishedYear ? Number(form.publishedYear) : undefined,
         price: Number(form.price),
       };
-      console.log('Request Payload:', payload);
 
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      console.log('Axios Config:', config);
+      // ✅ STEP 1: Backend API এ POST request পাঠানো
+      // এই request টা backend এর POST /books route এ যাবে
+      const response = await axios.post(`${baseUrl}/books`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-      const response = await axios.post(`${baseUrl}/books`, payload, config);
-      console.log('Response Data:', response.data);
+      // ✅ STEP 2: Database এ book successfully save হয়েছে
+      console.log('Book saved to database:', response.data);
 
+      // Success response handle করা
       setSuccess('Book added successfully!');
       toast.success('Book added successfully!');
+      
+      // Form reset করা
       setForm({
-        title: '',
-        author: '',
-        publishedYear: '',
-        genre: '',
-        price: '',
-        description: '',
-        bookUrl: '',
-        imageUrl: '',
+        title: '', author: '', publishedYear: '', genre: '',
+        price: '', description: '', bookUrl: '', imageUrl: '',
       });
-      // Refresh book list
+      
+      // ✅ STEP 3: Frontend এ book list refresh করা
+      // এই function টা আবার API call করে updated book list নিয়ে আসবে
       fetchBooks();
     } catch (err) {
-      console.error('Error adding book:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-        headers: err.response?.headers,
-      });
+      // Error handling
       const errorMsg = err.response?.data?.error || 'Failed to add book. Please try again.';
       setError(errorMsg);
-      if (errorMsg.includes('auth/id-token-expired')) {
-        setError('Your session has expired. Please log in again.');
-        navigate('/auth/login');
-      }
     } finally {
-      setLoading(false);
+      setLoading(false); // Loading state end করা
     }
   };
 
+  // Available books fetch করার function
   const fetchBooks = async () => {
-    setFetchLoading(true);
+    setFetchLoading(true); // Loading state start
     try {
+      // ✅ STEP 4: Public books API call করা
+      // এই API call টা backend এর GET /books route এ যাবে
+      // এবং database থেকে সব books (নতুন book সহ) return করবে
       const response = await axios.get(`${baseUrl}/books`);
-      console.log('Fetched Books:', response.data);
-      setBooks(response.data.books || []);
+      console.log('Fetched Books from API:', response.data);
+      
+      // ✅ STEP 5: Books state update করা
+      // এখানে নতুন added book টাও থাকবে
+      setBooks(response.data.books || response.data);
+      
+      console.log('Books state updated with new book');
     } catch (err) {
+      // Error handling
       console.error('Error fetching books:', {
         message: err.message,
         response: err.response?.data,
@@ -141,10 +134,11 @@ const AddNewBooks = () => {
       });
       setError('Failed to fetch books. Please try again.');
     } finally {
-      setFetchLoading(false);
+      setFetchLoading(false); // Loading state end
     }
   };
 
+  // Component mount হওয়ার সময় books fetch করা
   useEffect(() => {
     fetchBooks();
   }, []);
